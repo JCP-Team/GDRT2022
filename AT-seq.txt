@@ -1,3 +1,5 @@
+SIM800:
+
 AT
 AT+CMEE=2 //error codes
 AT+CREG? //should be 0,1
