@@ -6,11 +6,12 @@
 //#include "DHT.h"
 #include "SCD30.h"
 #include "Multichannel_Gas_GMXXX.h"
+#include "BareBoneSim800.h"
 #define SIM800_TX_PIN 2  //SIM800 TX is connected to Arduino D2  
 #define SIM800_RX_PIN 3 //SIM800 RX is connected to Arduino D3
 //I2C A4 SDA -- A5 SCL
 #define battPin A0
-//int PWX=4; //pull up pin for SIM800
+int PWX=4; //pull up pin for SIM800
 
 
   #ifdef  ARDUINO_SAMD_VARIANT_COMPLIANCE
@@ -20,8 +21,8 @@
 #endif
  
 // Communication ==========================================================================
-SoftwareSerial serialSIM800(SIM800_TX_PIN,SIM800_RX_PIN);
-  
+//SoftwareSerial serialSIM800(SIM800_TX_PIN,SIM800_RX_PIN);
+ BareBoneSim800 serialSIM800("afrihost"); 
 char server[] = "http://ie-gtfs.up.ac.za";
 char path[] = "/data/z-nano.php";
 int port = 80; // port 80 is the default for HTTP
@@ -53,22 +54,22 @@ String postData;
  
     GAS_GMXXX<TwoWire> multi_gas;
 //
-String _readSerial(){
+// String _readSerial(){
   
-  int timeout=0;
-  while (serialSIM800.available() != 0 && timeout< 10000)
-  {
-    Serial.write(serialSIM800.read());
-    delay(10);
-    timeout++;
-  }
-  Serial.flush();
-  if (serialSIM800.available()) {
- 	return serialSIM800.readString();
-  }
+//   int timeout=0;
+//   while (serialSIM800.available() != 0 && timeout< 10000)
+//   {
+//     Serial.write(serialSIM800.read());
+//     delay(10);
+//     timeout++;
+//   }
+//   Serial.flush();
+//   if (serialSIM800.available()) {
+//  	return serialSIM800.readString();
+//   }
   
 
-}
+// }
  
 void setup() {
   scd30.initialize();  
@@ -76,25 +77,26 @@ void setup() {
  
   Serial.begin(9600);   
   while(!Serial);    
-  serialSIM800.begin(9600);
-  delay(1000);
-
-  // serialSIM800.print(F("AT\r\n"));
-  // while (_readSerial().indexOf("OK")==-1 ){
-  //   serialSIM800.print(F("AT\r\n"));
-  // }
-   
-  Serial.println(F("Setup Complete!"));
+  //serialSIM800.begin(9600);
+  serialSIM800.begin();
+   delay(8000);
+   if(serialSIM800.isAttached())  Serial.println("Device is Attached");
+   Serial.println(" Connecting to APN");
+   bool netConnect = serialSIM800.gprsConnect();
+   if(netConnect)
+  Serial.println("Connected to Network");
+   else
+   Serial.println("An Error Occured");
  
- serialSIM800.print("AT+SAPBR=3,1,\"Contype\",\"GPRS\"");
-delay(2000);
+//  serialSIM800.print("AT+SAPBR=3,1,\"Contype\",\"GPRS\"");
+// delay(2000);
 
-serialSIM800.print("AT+SAPBR=3,1,\"APN\",\"afrihost\"");
-delay(2000);
-serialSIM800.print("AT+SAPBR=1,1");
-delay(2000);
-serialSIM800.print("AT+SAPBR=2,1");
-delay(2000);
+// serialSIM800.print("AT+SAPBR=3,1,\"APN\",\"afrihost\"");
+// delay(2000);
+// serialSIM800.print("AT+SAPBR=1,1");
+// delay(2000);
+// serialSIM800.print("AT+SAPBR=2,1");
+// delay(2000);
 
   
   /* SENSOR INITIATION:
@@ -194,20 +196,21 @@ postData+= "&Temperature="+String(result[1]);
 // postData+= ":"+String(result[1]);
 //postData = "?FROMARDUINO=100\"";
 
-serialSIM800.print("AT+HTTPINIT");
-delay(2000);
-serialSIM800.print( "AT+HTTPPARA=\"CID\",1");
-delay(2000);
-String url = "AT+HTTPPARA=\"URL\",\""+String(server)+path + String(postData) +"\"";
-Serial.println(url);
-serialSIM800.print(url); //url.c_str()
-delay(2000);
-serialSIM800.print("AT+HTTPPARA=\"PROPORT\",\"80\"");
-delay(2000);
-serialSIM800.print("AT+HTTPACTION=0");
-delay(10000);
+// serialSIM800.print("AT+HTTPINIT");
+// serialSIM800.print( "AT+HTTPPARA=\"CID\",1");
+
+//String url = "AT+HTTPPARA=\"URL\",\""+String(server)+path + String(postData) +"\"";
+String url = String(server)+path + String(postData);
+ Serial.println("Making HTTP Get Request");
+  String response = serialSIM800.sendHTTPData(url);
+    Serial.println("Received Info: ");
+    Serial.println(response);
+// serialSIM800.print(url); //url.c_str()
+// serialSIM800.print("AT+HTTPPARA=\"PROPORT\",\"80\"");
+// serialSIM800.print("AT+HTTPACTION=0");
+
 // _readSerial();
-serialSIM800.print("AT+HTTPTERM");
+
                 
 }
  
