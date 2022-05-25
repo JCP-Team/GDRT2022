@@ -51,8 +51,8 @@
  #include "AltSoftSerial.h"
  #include "Arduino.h"
  
- #define RX_PIN 8		//not needed since the AltSoftSerial has already define it inside
- #define TX_PIN 9
+ #define RX_PIN 3		//not needed since the AltSoftSerial has already define it inside
+ #define TX_PIN 2
  #define RESET_PIN 2 // pin to reset not currently used is this version
  
 #define TIMEOUT 99
@@ -69,7 +69,7 @@
 #define READY_TO_RECEIVE 10 // basically SMSGOOD means >
 #define OK 11
 
-#define DEBUG 0 //This enables debugging mode, to disable it - set value to 0
+#define DEBUG 1 //This enables debugging mode, to disable it - set value to 0
 
 
  

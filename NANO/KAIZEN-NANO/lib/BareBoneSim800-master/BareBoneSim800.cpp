@@ -178,16 +178,6 @@ AltSoftSerial gsmSerial;
 	gsmSerial.print(F("\"\r\n")); // set apn 
 	buffer=_readData();
 	delay(20);
-	gsmSerial.print(F("AT+SAPBR=3,1,\"USER\",\""));  
-	gsmSerial.print(_userName);
-	gsmSerial.print(F("\"\r\n")); // set username
-	buffer=_readData();
-	delay(20);
-	gsmSerial.print(F("AT+SAPBR=3,1,\"PWD\",\""));  
-	gsmSerial.print(_passWord);
-	gsmSerial.print(F("\"\r\n")); // set password  
-	buffer=_readData();
-	delay(20);
 	gsmSerial.print(F("AT+SAPBR=1,1\r\n")); // activate bearer context
 	buffer=_readData();
 	delay(100);
@@ -480,38 +470,39 @@ bool BareBoneSim800::gprsConnect(){
 	gprsDisconnect();
 	String buffer;
 	_enableBearerProfile(); // Activate the GPRS connectivity 
+	Serial.println("I got this far");
 	// attach the GPRS service
-	gsmSerial.print(F("AT+CGATT=1\r\n"));
-	byte result = _checkResponse(20000);
-	delay(20);
-	if (result != OK)
-		return false;
+	// gsmSerial.print(F("AT+CGATT=1\r\n"));
+	// byte result = _checkResponse(20000);
+	// delay(20);
+	// if (result != OK)
+	// 	return false;
 		
-	gsmSerial.print(F("AT+CIPMUX=0\r\n"));
-	result = _checkResponse(10000);
-	if (result != OK)
-		return false;
-	delay(10);
-	gsmSerial.print(F("AT+CSTT=\""));  
-	gsmSerial.print(_networkAPN);
-	gsmSerial.print(F("\",\""));
-	gsmSerial.print(_userName);
-	gsmSerial.print(F("\",\""));
-	gsmSerial.print(_passWord);
-	gsmSerial.print(F("\"\r\n")); //  
+	// gsmSerial.print(F("AT+CIPMUX=0\r\n"));
+	// result = _checkResponse(10000);
+	// if (result != OK)
+	// 	return false;
+	// delay(10);
+	// gsmSerial.print(F("AT+CSTT=\""));  
+	// gsmSerial.print(_networkAPN);
+	// gsmSerial.print(F("\",\""));
+	// gsmSerial.print(_userName);
+	// gsmSerial.print(F("\",\""));
+	// gsmSerial.print(_passWord);
+	// gsmSerial.print(F("\"\r\n")); //  
 
-	result = _checkResponse(60000);
-	if(result != OK)
-		return false;
-	delay(10);
-	gsmSerial.print(F("AT+CIICR\r\n"));
-	result = _checkResponse(85000); 
-	if(result != OK)
-		return false;
-	delay(10);
-	gsmSerial.print(F("AT+CIFSR\r\n"));
-	result = _checkResponse(5000); // this basically change to IP STATUS	
-	// but at the stage I believe IP will already be available
+	// result = _checkResponse(60000);
+	// if(result != OK)
+	// 	return false;
+	// delay(10);
+	// gsmSerial.print(F("AT+CIICR\r\n"));
+	// result = _checkResponse(85000); 
+	// if(result != OK)
+	// 	return false;
+	// delay(10);
+	// gsmSerial.print(F("AT+CIFSR\r\n"));
+	// result = _checkResponse(5000); // this basically change to IP STATUS	
+	// // but at the stage I believe IP will already be available
 	return true;	
 	
 }

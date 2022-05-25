@@ -22,7 +22,7 @@ int PWX=4; //pull up pin for SIM800
  
 // Communication ==========================================================================
 //SoftwareSerial serialSIM800(SIM800_TX_PIN,SIM800_RX_PIN);
- BareBoneSim800 serialSIM800("afrihost"); 
+// BareBoneSim800 serialSIM800("afrihost"); 
 char server[] = "http://ie-gtfs.up.ac.za";
 char path[] = "/data/z-nano.php";
 int port = 80; // port 80 is the default for HTTP
@@ -54,22 +54,7 @@ String postData;
  
     GAS_GMXXX<TwoWire> multi_gas;
 //
-// String _readSerial(){
-  
-//   int timeout=0;
-//   while (serialSIM800.available() != 0 && timeout< 10000)
-//   {
-//     Serial.write(serialSIM800.read());
-//     delay(10);
-//     timeout++;
-//   }
-//   Serial.flush();
-//   if (serialSIM800.available()) {
-//  	return serialSIM800.readString();
-//   }
-  
 
-// }
  
 void setup() {
   scd30.initialize();  
@@ -80,23 +65,15 @@ void setup() {
   //serialSIM800.begin(9600);
   serialSIM800.begin();
    delay(8000);
-   if(serialSIM800.isAttached())  Serial.println("Device is Attached");
-   Serial.println(" Connecting to APN");
-   bool netConnect = serialSIM800.gprsConnect();
-   if(netConnect)
-  Serial.println("Connected to Network");
-   else
-   Serial.println("An Error Occured");
- 
-//  serialSIM800.print("AT+SAPBR=3,1,\"Contype\",\"GPRS\"");
-// delay(2000);
-
-// serialSIM800.print("AT+SAPBR=3,1,\"APN\",\"afrihost\"");
-// delay(2000);
-// serialSIM800.print("AT+SAPBR=1,1");
-// delay(2000);
-// serialSIM800.print("AT+SAPBR=2,1");
-// delay(2000);
+  
+ serialSIM800.print("AT+SAPBR=3,1,\"Contype\",\"GPRS\"");
+`checkResponse()
+serialSIM800.print("AT+SAPBR=3,1,\"APN\",\"afrihost\"");
+delay(2000);
+serialSIM800.print("AT+SAPBR=1,1");
+delay(2000);
+serialSIM800.print("AT+SAPBR=2,1");
+delay(2000);
 
   
   /* SENSOR INITIATION:
@@ -202,7 +179,7 @@ postData+= "&Temperature="+String(result[1]);
 //String url = "AT+HTTPPARA=\"URL\",\""+String(server)+path + String(postData) +"\"";
 String url = String(server)+path + String(postData);
  Serial.println("Making HTTP Get Request");
-  String response = serialSIM800.sendHTTPData(url);
+  String response = serialSIM800.sendHTTPData(url.c_str());
     Serial.println("Received Info: ");
     Serial.println(response);
 // serialSIM800.print(url); //url.c_str()
