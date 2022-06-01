@@ -14,6 +14,7 @@ class SIM800C {
 	SoftwareSerial sim;
 	String buffer;
 	String SERVER ="http://ie-gtfs.up.ac.za/data/z-nano.php";
+	
 
 	bool find_result(const char *res_1, const char *res_2 = "");
 	
@@ -24,13 +25,11 @@ public:
 	SIM800C(const int TX_PIN = 8, const int RX_PIN = 9,
 		const int baud_rate = 9600) :sim(TX_PIN, RX_PIN) {
 		sim.begin(baud_rate);
-		Serial.println("SIM STARTED");
 	}
 
 	bool init();
 	void start(){
 	sim.begin(9600);
-		Serial.println("SIM STARTED");
 	};
 	
 	bool restart();
@@ -64,6 +63,9 @@ public:
 	bool create_tcp_server(unsigned int port);
 
 	bool multi_link_mode(bool flag);
+
+	void enable_error_msg();
+	void disable_error_msg();
 
 	unsigned int exec(const char *AT, unsigned int timeout = DEFAULT_TIMEOUT);
 

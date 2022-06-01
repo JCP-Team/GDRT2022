@@ -3,7 +3,7 @@
 bool SIM800C::init()
 {
 	echo(false);
-	return sim_status() && net_registration() && gprs_status();
+	return sim_status() && net_registration(); //&& gprs_status();
 }
 
 bool SIM800C::restart()
@@ -25,7 +25,12 @@ bool SIM800C::gprs_status()
 {
 	return exec("AT+CGATT?") && find_result("+CGATT: 1", "OK");
 }
-
+void SIM800C::enable_error_msg(){
+	exec("AT+CMEE=2");
+}
+void SIM800C::disable_error_msg(){
+	exec("AT+CMEE=0");
+}
 bool SIM800C::apn(const char * apn)
 {
 	char at[20];
@@ -89,7 +94,7 @@ bool SIM800C::create_tcp_server(unsigned int port)
 	return exec(at) && find_result("SERVER OK");
 }
 bool SIM800C::http_init()
-{
+{	
 	exec("AT+SAPBR=3,1,\"APN\",\"afrihost\"");
 	exec("AT+SAPBR=1,1");
 	exec("AT+SAPBR=2,1");
@@ -98,15 +103,18 @@ bool SIM800C::http_init()
 
 String SIM800C::http_send(String send)
 {
-	// while(exec("AT+HTTPINIT") && !find_result("OK")){
+	 //enable_error_msg();
 		exec("AT+HTTPPARA=\"CID\",1");
-		char at[40+send.length() + 10];
-		sprintf(at, "AT+HTTPPARA=\"URL\",\"%s%s\"", SERVER,send);
+		String url = SERVER+send;
+		char at[url.length() + 42];
+		sprintf(at, "AT+HTTPPARA=\"URL\",\"%s\"", url.c_str());
+		
+		//Serial.println(at);
 		exec(at);
 		exec("AT+HTTPPARA=\"PROPORT\",\"80\"");
 		exec("AT+HTTPACTION=0",10000);
 		return  send_result();
-	//}
+	
 }
 
 // false -> 单链路 true -> 多链路
