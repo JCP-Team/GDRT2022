@@ -67,6 +67,8 @@ void setup() {
   digitalWrite(PWX, LOW);    
   delay(1000);
 
+   multi_gas.begin(Wire,0x08);
+   sensor_HM330X.init();
 
   Serial.begin(9600);
   scd30.initialize();  
@@ -90,7 +92,35 @@ void loop() {
 
 while(!HTTPINIT) HTTPINIT=sim->http_init(); 
 
-postData = "?FROMARDUINO=100";
+int val = 0;
+val = analogRead(battPin);  // read the input pin
+float batt_m = 4850 * float(val)/1024;
+
+sensor_HM330X.read_sensor_value(buf, 29) ;
+ parse_result(buf,HM330X_values);
+float result[3] = {0}; //0: co2, 1: temp, 2: hum
+scd30.getCarbonDioxideConcentration(result);
+
+uint32_t val_NO2 = multi_gas.measure_NO2();
+uint32_t val_C2H50H = multi_gas.measure_C2H5OH();
+uint32_t val_VOC = multi_gas.measure_VOC();
+uint32_t val_CO = multi_gas.measure_CO();
+
+Serial.println("N02: " +String(val_NO2) + " C2H50H: " +String(val_C2H50H) + " VOC: " +String(val_VOC )+ " CO: " +String(val_CO));
+for(int i=1; i<3;i++)
+ Serial.println(" value" +String(i)+'='+String(HM330X_values[i]));
+
+Serial.println("CO2: " + String(result[0]) +" " + result[1] + " " + result[2]);
+
+postData= "?";
+postData+= "Sensor_ID=SEN_0" ;
+postData+= "&BATT="+String(batt_m);
+postData+= "&PM2=" +String(HM330X_values[1]);
+postData+= "&PM10="+String(HM330X_values[2]);
+postData+= "&VOC="+String(val_VOC);
+postData+= "&C0=" +String(val_CO);
+postData+= "&C02=" +String(result[0]);
+postData+= "&Temperature="+String(result[1]);
 
 
 Serial.println("Making HTTP Get Request with response:");
