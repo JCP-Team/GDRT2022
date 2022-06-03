@@ -27,6 +27,7 @@ char server[] = "http://ie-gtfs.up.ac.za";
 char path[] = "/data/z-nano.php";
 int port = 80; // port 80 is the default for HTTP
 String postData;
+bool HTTPINIT=false;
 
 // Sensors =======================================================
   HM330X sensor_HM330X;
@@ -79,19 +80,21 @@ void setup() {
   }
  
   Serial.println("SIM OK");
-  Serial.println("Initialised HTTP with response: ");
-  String response = (sim->http_init())? "OK INIT": "BAD INIT";
-  Serial.println(response);
+  HTTPINIT=sim->http_init();
+ Serial.println("Initialised HTTP with response: ");
+ (HTTPINIT)? Serial.println("OK INIT"): Serial.println("BAD INIT"); 
 }
 int i =0;
  
 void loop() {
 
+while(!HTTPINIT) HTTPINIT=sim->http_init(); 
+
 postData = "?FROMARDUINO=100";
 
 
 Serial.println("Making HTTP Get Request with response:");
- String response = sim->http_send(postData);
+String response = sim->http_send(postData);
 //  sim->disable_error_msg(); // enable verbose error message in http_send, but should disable for other methods.
 Serial.println(response);            
 delay(60000);             
