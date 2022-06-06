@@ -89,9 +89,17 @@ void setup() {
 int i =0;
  
 void loop() {
-
-while(!HTTPINIT) HTTPINIT=sim->http_init(); 
-
+int attempts =0;
+while(!HTTPINIT){
+  HTTPINIT=sim->http_init(); 
+  if(attempts++ == 5){
+    digitalWrite(PWX, HIGH);
+  delay(3000);
+  digitalWrite(PWX, LOW);    
+  delay(1000);
+  }
+  delay(500);
+}
 int val = 0;
 val = analogRead(battPin);  // read the input pin
 float batt_m = 4850 * float(val)/1024;
@@ -128,6 +136,6 @@ String response = sim->http_send(postData);
 //  sim->disable_error_msg(); // enable verbose error message in http_send, but should disable for other methods.
 Serial.println(response);            
 delay(60000);             
-   
+
 }
  
