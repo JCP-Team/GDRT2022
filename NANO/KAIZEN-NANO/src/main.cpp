@@ -47,9 +47,13 @@ void setup() {
   pinMode(PWX, OUTPUT);
   sim = new SIM800C(SIM800_TX_PIN,SIM800_RX_PIN);
   
-  digitalWrite(PWX, HIGH);
+  // digitalWrite(PWX, HIGH);
+  // delay(3000);
+  // digitalWrite(PWX, LOW);    
+  // delay(1000);
+  digitalWrite(PWX, LOW);
   delay(3000);
-  digitalWrite(PWX, LOW);    
+  digitalWrite(PWX, HIGH);    
   delay(1000);
 
    multi_gas.begin(Wire,0x08);
