@@ -12,17 +12,9 @@
 //I2C A4 SDA -- A5 SCL
 #define battPin A0
 int PWX=4; //pull up pin for SIM800
-
-
-  #ifdef  ARDUINO_SAMD_VARIANT_COMPLIANCE
-    #define SERIAL_OUTPUT SerialUSB
-#else
-    #define SERIAL_OUTPUT Serial
-#endif
  
 // Communication ==========================================================================
-//SoftwareSerial serialSIM800(SIM800_TX_PIN,SIM800_RX_PIN);
-// BareBoneSim800 serialSIM800("afrihost"); 
+SIM800C* sim;
 char server[] = "http://ie-gtfs.up.ac.za";
 char path[] = "/data/z-nano.php";
 int port = 80; // port 80 is the default for HTTP
@@ -30,6 +22,8 @@ String postData;
 bool HTTPINIT=false;
 
 // Sensors =======================================================
+
+  GAS_GMXXX<TwoWire> multi_gas;
   HM330X sensor_HM330X;
   uint8_t buf[30];
   uint16_t HM330X_values[8];
@@ -48,15 +42,6 @@ bool HTTPINIT=false;
     return NO_ERROR;
 }
 
-//DHT20 ===========================================================
-// DHT dht(DHT20); 
-
-//===========MULTI GAS
- 
-    GAS_GMXXX<TwoWire> multi_gas;
-//
-
-SIM800C* sim;
  
 void setup() {
   pinMode(PWX, OUTPUT);
@@ -101,8 +86,8 @@ while(!HTTPINIT){
   delay(500);
 }
 int val = 0;
-val = analogRead(battPin);  // read the input pin
-float batt_m = 4850 * float(val)/1024;
+val = analogRead(battPin); 
+float batt_m = 4850 * float(val)/1024; //manually measured reference voltage 4850 mV
 
 sensor_HM330X.read_sensor_value(buf, 29) ;
  parse_result(buf,HM330X_values);
