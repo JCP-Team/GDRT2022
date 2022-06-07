@@ -70,20 +70,20 @@ void setup() {
    multi_gas.begin(Wire,0x08);
    sensor_HM330X.init();
 
-  Serial.begin(9600);
+  //Serial.begin(9600);
   scd30.initialize();  
  
-  while(!Serial);    
+ // while(!Serial);    
   sim->apn("afrihost");
 
   while(!sim->init()) {
-    Serial.println("LOADING SIM");
+    //Serial.println("LOADING SIM");
     delay(1000);
   }
  
-  Serial.println("SIM OK");
+ // Serial.println("SIM OK");
   HTTPINIT=sim->http_init();
- Serial.println("Initialised HTTP with response: ");
+// Serial.println("Initialised HTTP with response: ");
  (HTTPINIT)? Serial.println("OK INIT"): Serial.println("BAD INIT"); 
 }
 int i =0;
@@ -114,11 +114,11 @@ uint32_t val_C2H50H = multi_gas.measure_C2H5OH();
 uint32_t val_VOC = multi_gas.measure_VOC();
 uint32_t val_CO = multi_gas.measure_CO();
 
-Serial.println("N02: " +String(val_NO2) + " C2H50H: " +String(val_C2H50H) + " VOC: " +String(val_VOC )+ " CO: " +String(val_CO));
-for(int i=1; i<3;i++)
- Serial.println(" value" +String(i)+'='+String(HM330X_values[i]));
+// Serial.println("N02: " +String(val_NO2) + " C2H50H: " +String(val_C2H50H) + " VOC: " +String(val_VOC )+ " CO: " +String(val_CO));
+// for(int i=1; i<3;i++)
+//  Serial.println(" value" +String(i)+'='+String(HM330X_values[i]));
 
-Serial.println("CO2: " + String(result[0]) +" " + result[1] + " " + result[2]);
+//Serial.println("CO2: " + String(result[0]) +" " + result[1] + " " + result[2]);
 
 postData= "?";
 postData+= "Sensor_ID=SEN_0" ;
@@ -131,10 +131,10 @@ postData+= "&C02=" +String(result[0]);
 postData+= "&Temperature="+String(result[1]);
 
 
-Serial.println("Making HTTP Get Request with response:");
+//Serial.println("Making HTTP Get Request with response:");
 String response = sim->http_send(postData);
 //  sim->disable_error_msg(); // enable verbose error message in http_send, but should disable for other methods.
-Serial.println(response);            
+//Serial.println(response);            
 delay(60000);             
 
 }
