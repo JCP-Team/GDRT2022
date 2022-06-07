@@ -52,7 +52,7 @@ bool SIM800C::tcp_send(const char * send)
 	int len = strlen(send);
 	char at[20];
 	sprintf(at, "AT+CIPSEND=%d", len);
-	Serial.println(at);
+	//Serial.println(at);
 	exec(at) && find_result(">");
 	
 	return exec(send, 1000 * 3) && find_result("SEND OK");
