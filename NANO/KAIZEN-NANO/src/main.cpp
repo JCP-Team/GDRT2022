@@ -19,6 +19,7 @@ char server[] = "http://ie-gtfs.up.ac.za";
 char path[] = "/data/z-nano.php";
 int port = 80; // port 80 is the default for HTTP
 String postData;
+String DEVICE_ID ="C01";
 bool HTTPINIT=false;
 
 // Sensors =======================================================
@@ -59,7 +60,7 @@ void setup() {
    multi_gas.begin(Wire,0x08);
    sensor_HM330X.init();
 
-  //Serial.begin(9600);
+  Serial.begin(9600);
   scd30.initialize();  
  
  // while(!Serial);    
@@ -110,7 +111,7 @@ uint32_t val_CO = multi_gas.measure_CO();
 //Serial.println("CO2: " + String(result[0]) +" " + result[1] + " " + result[2]);
 
 postData= "?";
-postData+= "Sensor_ID=SEN_0" ;
+postData+= "ID=" +DEVICE_ID;
 postData+= "&BATT="+String(batt_m);
 postData+= "&PM2=" +String(HM330X_values[1]);
 postData+= "&PM10="+String(HM330X_values[2]);
@@ -119,11 +120,11 @@ postData+= "&C0=" +String(val_CO);
 postData+= "&C02=" +String(result[0]);
 postData+= "&Temperature="+String(result[1]);
 
-
-//Serial.println("Making HTTP Get Request with response:");
+//Serial.println(postData);
+Serial.println("Making HTTP Get Request with response:");
 String response = sim->http_send(postData);
 //  sim->disable_error_msg(); // enable verbose error message in http_send, but should disable for other methods.
-//Serial.println(response);            
+Serial.println(response);            
 delay(60000);             
 
 }
