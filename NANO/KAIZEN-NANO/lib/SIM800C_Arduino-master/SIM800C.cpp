@@ -93,6 +93,10 @@ bool SIM800C::create_tcp_server(unsigned int port)
 	sprintf(at, "AT+CIPSERVER=%d", port);
 	return exec(at) && find_result("SERVER OK");
 }
+void SIM800C::http_end(){
+	exec("AT+HTTPTERM");
+	exec("AT+SAPBR=0,1");
+}
 bool SIM800C::http_init()
 {	
 	exec("AT+SAPBR=3,1,\"APN\",\"afrihost\"");
@@ -117,7 +121,7 @@ String SIM800C::http_send(String send)
 	
 }
 
-// false -> 单链路 true -> 多链路
+
 bool SIM800C::multi_link_mode(bool flag)
 {
 	char at[15];
@@ -151,7 +155,6 @@ bool SIM800C::echo(bool flag)
 	return exec(at) && find_result("OK");
 }
 
-// 基站定位
 bool SIM800C::base_station_position(double &longitude, double &latitude, unsigned int &precision)
 {
 	exec("AT+SAPBR=3,1,\"APN\",\"3gnet\"");

@@ -4,14 +4,14 @@ AT+CREG? //should be 0,1
 AT+CSQ //signal strenght
 AT+SAPBR=3,1,"Contype","GPRS"
 AT+SAPBR=3,1,"APN","afrihost"
-AT+SAPBR=1,1
-AT+SAPBR=2,1
-AT+HTTPINIT
+AT+SAPBR=1,1 //Bearer settings for IP Application, here: open bearer connected
+AT+SAPBR=2,1 //Query bearer connected
+AT+HTTPINIT 
 AT+HTTPPARA="CID",1
 AT+HTTPPARA="URL","http://ie-gtfs.up.ac.za/data/Post_PHP0423.php?data=1"
 AT+HTTPPARA="PROPORT","80"
-AT+HTTPACTION=0
-AT+HTTPTERM
-AT+SAPBR=0,1
+AT+HTTPACTION=0  //GET action
+AT+HTTPTERM	
+AT+SAPBR=0,1     //Close bearer
 
 AT+HTTPPARA="URL","http://ie-gtfs.up.ac.za/data/z-nano.php?FROM_ARDUINO=TRUE&ID=SIM800C&batt=3.4"

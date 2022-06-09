@@ -125,7 +125,7 @@ Serial.println("Making HTTP Get Request with response:");
 String response = sim->http_send(postData);
 //  sim->disable_error_msg(); // enable verbose error message in http_send, but should disable for other methods.
 Serial.println(response);            
-delay(60000);             
+delay(30000);             
 
 }
  

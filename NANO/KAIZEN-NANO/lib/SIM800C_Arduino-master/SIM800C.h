@@ -1,5 +1,6 @@
 // SIM800C.h
 
+
 #ifndef _SIM800C_h
 #define _SIM800C_h
 
@@ -49,6 +50,7 @@ public:
 	bool http_init();
 	
 	String http_send(String send);
+	void http_end();
 
 	String send_result();
 
