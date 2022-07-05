@@ -86,7 +86,15 @@ String SIM800C::get_str_localip()
 	buffer.trim();
 	return buffer;
 }
+bool SIM800C::wake(){
+	exec("AT");
+	delay(100);
+	return exec("AT+CSCLK=0") && sim_status();
 
+}
+void SIM800C::sleep(){
+	exec("AT+CSCLK=2");
+}
 bool SIM800C::create_tcp_server(unsigned int port)
 {
 	char at[25];

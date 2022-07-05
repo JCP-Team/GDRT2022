@@ -61,7 +61,8 @@ public:
 	bool echo(bool flag); 
 
 	void debug();
-
+	bool wake();
+	void sleep();
 	bool create_tcp_server(unsigned int port);
 
 	bool multi_link_mode(bool flag);

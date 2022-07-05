@@ -6,12 +6,14 @@
 #include <Wire.h>
 #include "SCD30.h"
 #include "Multichannel_Gas_GMXXX.h"
-
+#define ON true
+#define OFF false
 #define SIM800_TX_PIN 2  //SIM800 TX is connected to Arduino D2  
 #define SIM800_RX_PIN 3 //SIM800 RX is connected to Arduino D3
 //I2C A4 SDA -- A5 SCL
 #define battPin A0
 int PWX=4; //pull up pin for SIM800
+int BASE= 5; //Base of transistor.
  
 // Communication ==========================================================================
 SIM800C* sim;
@@ -21,8 +23,13 @@ int port = 80; // port 80 is the default for HTTP
 String postData;
 String DEVICE_ID ="C01";
 bool HTTPINIT=false;
+#define WAIT 60000
 
 // Sensors =======================================================
+  void sensor_state(bool state){ //1 is on, 0 is off
+    if(state) digitalWrite(BASE,LOW);
+    else digitalWrite(BASE,HIGH);
+  }
 
   GAS_GMXXX<TwoWire> multi_gas;
   HM330X sensor_HM330X;
@@ -46,16 +53,19 @@ bool HTTPINIT=false;
  
 void setup() {
   pinMode(PWX, OUTPUT);
+  pinMode(BASE,OUTPUT);
   sim = new SIM800C(SIM800_TX_PIN,SIM800_RX_PIN);
   
   // digitalWrite(PWX, HIGH);
   // delay(3000);
   // digitalWrite(PWX, LOW);    
   // delay(1000);
+  sensor_state(ON);
   digitalWrite(PWX, LOW);
   delay(3000);
   digitalWrite(PWX, HIGH);    
   delay(1000);
+
 
    multi_gas.begin(Wire,0x08);
    sensor_HM330X.init();
@@ -67,13 +77,13 @@ void setup() {
   sim->apn("afrihost");
 
   while(!sim->init()) {
-    //Serial.println("LOADING SIM");
+    Serial.println("LOADING SIM");
     delay(1000);
   }
  
  // Serial.println("SIM OK");
   HTTPINIT=sim->http_init();
-// Serial.println("Initialised HTTP with response: ");
+ Serial.println("Initialised HTTP with response: ");
  (HTTPINIT)? Serial.println("OK INIT"): Serial.println("BAD INIT"); 
 }
 int i =0;
@@ -125,7 +135,13 @@ Serial.println("Making HTTP Get Request with response:");
 String response = sim->http_send(postData);
 //  sim->disable_error_msg(); // enable verbose error message in http_send, but should disable for other methods.
 Serial.println(response);            
-delay(30000);             
-
+sensor_state(OFF);
+sim->sleep();
+delay(WAIT); 
+sensor_state(ON);
+delay(1000);
+while(!sim->wake()){
+  delay(1000);
+}            
 }
  
