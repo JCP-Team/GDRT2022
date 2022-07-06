@@ -23,7 +23,8 @@ int port = 80; // port 80 is the default for HTTP
 String postData;
 String DEVICE_ID ="C01";
 bool HTTPINIT=false;
-#define WAIT 60000
+#define WAIT 10000
+#define WARMUP 20000
 
 // Sensors =======================================================
   void sensor_state(bool state){ //1 is on, 0 is off
@@ -100,6 +101,8 @@ while(!HTTPINIT){
   }
   delay(500);
 }
+HTTPINIT=false;
+
 int val = 0;
 val = analogRead(battPin); 
 float batt_m = 4850 * float(val)/1024; //manually measured reference voltage 4850 mV
@@ -135,13 +138,14 @@ Serial.println("Making HTTP Get Request with response:");
 String response = sim->http_send(postData);
 //  sim->disable_error_msg(); // enable verbose error message in http_send, but should disable for other methods.
 Serial.println(response);            
-sensor_state(OFF);
-sim->sleep();
-delay(WAIT); 
-sensor_state(ON);
-delay(1000);
-while(!sim->wake()){
-  delay(1000);
-}            
+
+// sensor_state(OFF);
+// sim->sleep();
+// delay(WAIT); 
+// sensor_state(ON);
+// delay(1000);
+// sim->wake();
+//   delay(100);
+//  delay(WARMUP);          
 }
  
