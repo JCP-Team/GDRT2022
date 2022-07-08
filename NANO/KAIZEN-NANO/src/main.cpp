@@ -13,7 +13,7 @@
 //I2C A4 SDA -- A5 SCL
 #define battPin A0
 int PWX=4; //pull up pin for SIM800
-int BASE= 5; //Base of transistor.
+int BASE= 5; //Relay.
  
 // Communication ==========================================================================
 SIM800C* sim;
@@ -27,9 +27,9 @@ bool HTTPINIT=false;
 #define WARMUP 20000
 
 // Sensors =======================================================
-  void sensor_state(bool state){ //1 is on, 0 is off
-    if(state) digitalWrite(BASE,LOW);
-    else digitalWrite(BASE,HIGH);
+  void external_state(bool state){ 
+    if(state) digitalWrite(BASE,HIGH);
+    else digitalWrite(BASE,LOW);
   }
 
   GAS_GMXXX<TwoWire> multi_gas;
@@ -57,11 +57,7 @@ void setup() {
   pinMode(BASE,OUTPUT);
   sim = new SIM800C(SIM800_TX_PIN,SIM800_RX_PIN);
   
-  // digitalWrite(PWX, HIGH);
-  // delay(3000);
-  // digitalWrite(PWX, LOW);    
-  // delay(1000);
-  sensor_state(ON);
+  external_state(ON);
   digitalWrite(PWX, LOW);
   delay(3000);
   digitalWrite(PWX, HIGH);    
@@ -139,13 +135,10 @@ String response = sim->http_send(postData);
 //  sim->disable_error_msg(); // enable verbose error message in http_send, but should disable for other methods.
 Serial.println(response);            
 
-// sensor_state(OFF);
-// sim->sleep();
-// delay(WAIT); 
-// sensor_state(ON);
-// delay(1000);
-// sim->wake();
-//   delay(100);
-//  delay(WARMUP);          
+external_state(OFF);
+delay(WAIT); 
+external_state(ON);
+delay(WARMUP);       
+
 }
  
