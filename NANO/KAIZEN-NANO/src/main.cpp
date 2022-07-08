@@ -24,7 +24,7 @@ String postData;
 String DEVICE_ID ="C01";
 bool HTTPINIT=false;
 #define WAIT 10000
-#define WARMUP 20000
+#define WARMUP 60000
 
 // Sensors =======================================================
   void external_state(bool state){ 
@@ -51,8 +51,20 @@ bool HTTPINIT=false;
     return NO_ERROR;
 }
 
+void indicate_state(int num){
+  int i=num;
+  while((i)>0){
+    digitalWrite(LED_BUILTIN,HIGH);
+    delay(250);
+    digitalWrite(LED_BUILTIN,LOW);
+    delay(250);
+    i--;
+  }
+}
+
  
 void setup() {
+  pinMode(LED_BUILTIN,OUTPUT);
   pinMode(PWX, OUTPUT);
   pinMode(BASE,OUTPUT);
   sim = new SIM800C(SIM800_TX_PIN,SIM800_RX_PIN);
@@ -75,6 +87,7 @@ void setup() {
 
   while(!sim->init()) {
     Serial.println("LOADING SIM");
+       indicate_state(2);
     delay(1000);
   }
  
@@ -87,16 +100,20 @@ int i =0;
  
 void loop() {
 int attempts =0;
+
 while(!HTTPINIT){
-  HTTPINIT=sim->http_init(); 
-  if(attempts++ == 5){
+  if(attempts++ >= 5){
     digitalWrite(PWX, HIGH);
   delay(3000);
   digitalWrite(PWX, LOW);    
   delay(1000);
   }
-  delay(500);
+   indicate_state(2);
+  HTTPINIT=sim->http_init();
+  if(HTTPINIT)break; 
+  delay(120000);
 }
+indicate_state(3);
 HTTPINIT=false;
 
 int val = 0;
@@ -132,6 +149,7 @@ postData+= "&Temperature="+String(result[1]);
 //Serial.println(postData);
 Serial.println("Making HTTP Get Request with response:");
 String response = sim->http_send(postData);
+delay(2000);
 //  sim->disable_error_msg(); // enable verbose error message in http_send, but should disable for other methods.
 Serial.println(response);            
 
