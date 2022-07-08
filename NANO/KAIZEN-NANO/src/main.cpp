@@ -2,7 +2,7 @@
 #include <SoftwareSerial.h>
 #include <Seeed_HM330X.h>
 #include "sensirion_common.h"
-#include "SIM800C.h"
+#include "Sim800l.h"
 #include <Wire.h>
 #include "SCD30.h"
 #include "Multichannel_Gas_GMXXX.h"
@@ -16,9 +16,9 @@ int PWX=4; //pull up pin for SIM800
 int BASE= 5; //Relay.
  
 // Communication ==========================================================================
-SIM800C* sim;
-char server[] = "http://ie-gtfs.up.ac.za";
-char path[] = "/data/z-nano.php";
+ Sim800l sim;
+//char server[] = "http://ie-gtfs.up.ac.za";
+//char path[] = "/data/z-nano.php";
 int port = 80; // port 80 is the default for HTTP
 String postData;
 String DEVICE_ID ="C01";
@@ -67,7 +67,7 @@ void setup() {
   pinMode(LED_BUILTIN,OUTPUT);
   pinMode(PWX, OUTPUT);
   pinMode(BASE,OUTPUT);
-  sim = new SIM800C(SIM800_TX_PIN,SIM800_RX_PIN);
+
   
   external_state(ON);
   digitalWrite(PWX, LOW);
@@ -81,40 +81,40 @@ void setup() {
 
   Serial.begin(9600);
   scd30.initialize();  
- 
- // while(!Serial);    
-  sim->apn("afrihost");
+  sim.begin();
 
-  while(!sim->init()) {
-    Serial.println("LOADING SIM");
-       indicate_state(2);
-    delay(1000);
-  }
+
+  // while(!sim->init()) {
+  //   Serial.println("LOADING SIM");
+  //      indicate_state(2);
+  //   delay(1000);
+  // }
  
  // Serial.println("SIM OK");
-  HTTPINIT=sim->http_init();
+  //HTTPINIT=sim->http_init();
+  sim.activateBearerProfile();
  Serial.println("Initialised HTTP with response: ");
  (HTTPINIT)? Serial.println("OK INIT"): Serial.println("BAD INIT"); 
 }
 int i =0;
  
 void loop() {
-int attempts =0;
-
-while(!HTTPINIT){
-  if(attempts++ >= 5){
-    digitalWrite(PWX, HIGH);
-  delay(3000);
-  digitalWrite(PWX, LOW);    
-  delay(1000);
-  }
-   indicate_state(2);
-  HTTPINIT=sim->http_init();
-  if(HTTPINIT)break; 
-  delay(120000);
-}
-indicate_state(3);
-HTTPINIT=false;
+// int attempts =0;
+// HTTPINIT=sim->http_init();
+// // while(!HTTPINIT){
+// //   if(attempts++ >= 5){
+// //     digitalWrite(PWX, HIGH);
+// //   delay(3000);
+// //   digitalWrite(PWX, LOW);    
+// //   delay(1000);
+// //   }
+// //    indicate_state(2);
+// //   HTTPINIT=sim->http_init();
+// //   if(HTTPINIT)break; 
+// //   delay(120000);
+// // }
+// indicate_state(3);
+// HTTPINIT=false;
 
 int val = 0;
 val = analogRead(battPin); 
@@ -148,15 +148,15 @@ postData+= "&Temperature="+String(result[1]);
 
 //Serial.println(postData);
 Serial.println("Making HTTP Get Request with response:");
-String response = sim->http_send(postData);
-delay(2000);
+sim.sendHTTP(postData);
 //  sim->disable_error_msg(); // enable verbose error message in http_send, but should disable for other methods.
-Serial.println(response);            
+sim.deactivateBearerProfile();        
 
 external_state(OFF);
 delay(WAIT); 
 external_state(ON);
+sim.activateBearerProfile();
 delay(WARMUP);       
-
+  
 }
  
