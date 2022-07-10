@@ -100,7 +100,7 @@ int attempts =0;
 
 while(!HTTPINIT){
   if(attempts++ >= 5){
-    reset_sim
+    reset_sim();
   delay(1000);
   }
   HTTPINIT=sim->http_init();
