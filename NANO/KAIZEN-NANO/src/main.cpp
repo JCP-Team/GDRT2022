@@ -86,10 +86,11 @@ void setup() {
   scd30.initialize();  
    
   sim->apn("afrihost");
-
+  int attempts =0;
   while(!sim->init()) {
     Serial.println("LOADING SIM");
     delay(1000);
+    if( attempts++ > 50) break;
   }
   HTTPINIT=sim->http_init();
 }
