@@ -12,8 +12,8 @@
 #define SIM800_RX_PIN 3 //SIM800 RX is connected to Arduino D3
 //I2C A4 SDA -- A5 SCL
 #define battPin A0
-int PWX=4; //pull up pin for SIM800
-int BASE= 5; //Relay.
+int PWX=5; //pull up pin for SIM800
+int BASE= 10; //Relay.
  
 // Communication ==========================================================================
 SIM800C* sim;
@@ -21,7 +21,7 @@ char server[] = "http://ie-gtfs.up.ac.za";
 char path[] = "/data/z-nano.php";
 int port = 80; // port 80 is the default for HTTP
 String postData;
-String DEVICE_ID ="C01";
+String DEVICE_ID ="F1";
 bool HTTPINIT=false;
 #define WAIT 10000
 #define WARMUP 60000
@@ -51,6 +51,13 @@ bool HTTPINIT=false;
     return NO_ERROR;
 }
 
+void reset_sim(){
+  digitalWrite(PWX, LOW);
+  delay(3000);
+  digitalWrite(PWX, HIGH);    
+  delay(1000);
+}
+
 void indicate_state(int num){
   int i=num;
   while((i)>0){
@@ -70,31 +77,21 @@ void setup() {
   sim = new SIM800C(SIM800_TX_PIN,SIM800_RX_PIN);
   
   external_state(ON);
-  digitalWrite(PWX, LOW);
-  delay(3000);
-  digitalWrite(PWX, HIGH);    
-  delay(1000);
-
+  reset_sim();
 
    multi_gas.begin(Wire,0x08);
    sensor_HM330X.init();
 
   Serial.begin(9600);
   scd30.initialize();  
- 
- // while(!Serial);    
+   
   sim->apn("afrihost");
 
   while(!sim->init()) {
     Serial.println("LOADING SIM");
-       indicate_state(2);
     delay(1000);
   }
- 
- // Serial.println("SIM OK");
   HTTPINIT=sim->http_init();
- Serial.println("Initialised HTTP with response: ");
- (HTTPINIT)? Serial.println("OK INIT"): Serial.println("BAD INIT"); 
 }
 int i =0;
  
@@ -103,17 +100,14 @@ int attempts =0;
 
 while(!HTTPINIT){
   if(attempts++ >= 5){
-    digitalWrite(PWX, HIGH);
-  delay(3000);
-  digitalWrite(PWX, LOW);    
+    reset_sim
   delay(1000);
   }
-   indicate_state(2);
   HTTPINIT=sim->http_init();
   if(HTTPINIT)break; 
-  delay(120000);
+  delay(30000);
 }
-indicate_state(3);
+
 HTTPINIT=false;
 
 int val = 0;
@@ -130,28 +124,18 @@ uint32_t val_C2H50H = multi_gas.measure_C2H5OH();
 uint32_t val_VOC = multi_gas.measure_VOC();
 uint32_t val_CO = multi_gas.measure_CO();
 
-// Serial.println("N02: " +String(val_NO2) + " C2H50H: " +String(val_C2H50H) + " VOC: " +String(val_VOC )+ " CO: " +String(val_CO));
-// for(int i=1; i<3;i++)
-//  Serial.println(" value" +String(i)+'='+String(HM330X_values[i]));
-
-//Serial.println("CO2: " + String(result[0]) +" " + result[1] + " " + result[2]);
-
 postData= "?";
-postData+= "ID=" +DEVICE_ID;
-postData+= "&BATT="+String(batt_m);
-postData+= "&PM2=" +String(HM330X_values[1]);
-postData+= "&PM10="+String(HM330X_values[2]);
-postData+= "&VOC="+String(val_VOC);
-postData+= "&C0=" +String(val_CO);
-postData+= "&C02=" +String(result[0]);
-postData+= "&Temperature="+String(result[1]);
+postData+= "I:" +DEVICE_ID;
+postData+= "&B:"+String(batt_m);
+postData+= "&P2:" +String(HM330X_values[1]);
+postData+= "&P1:"+String(HM330X_values[2]);
+postData+= "&V:"+String(val_VOC);
+postData+= "&C:" +String(val_CO);
+postData+= "&C:" +String(result[0]);
+postData+= "&T:"+String(result[1]);
 
-//Serial.println(postData);
-Serial.println("Making HTTP Get Request with response:");
 String response = sim->http_send(postData);
-delay(2000);
-//  sim->disable_error_msg(); // enable verbose error message in http_send, but should disable for other methods.
-Serial.println(response);            
+delay(5000);
 
 external_state(OFF);
 delay(WAIT); 
