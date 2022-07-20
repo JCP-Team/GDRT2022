@@ -1,0 +1,19 @@
+05/15/2022 06:30:19 pm	data1= 3444343	data2= 5566	data3= string
+05/15/2022 06:30:21 pm	data1= 3444343	data2= 5566	data3= string
+05/15/2022 06:32:18 pm	data1= 3444343	data2= 5566	data3= string	data4= 34.532
+05/15/2022 06:32:19 pm	data1= 3444343	data2= 5566	data3= string	data4= 34.532
+05/15/2022 07:48:43 pm
+05/15/2022 07:58:10 pm
+05/16/2022 04:09:54 pm	test= 1
+05/16/2022 04:26:30 pm	FROM_ARDUINO= 100	VATT= 3.4
+05/16/2022 05:34:45 pm	FROM_ARDUINO= TEST_2	LENGTH_CHECK= 22222222222222222222
+05/17/2022 02:48:12 pm
+05/17/2022 07:59:56 pm	FROM_ARDUINO= true	SensorID= 0	PM2= 0	PM10= 0	VOC= 0	CO2= 0	Infrared_CO2= 0	Temperature= 0	Humidity= 0	Battery_Level= 0
+05/17/2022 08:00:37 pm	FROM_ARDUINO= true	SensorID= 0	PM2= 0	PM10= 0	VOC= 0	CO2= 0	Infrared_CO2= 0	Temperature= 0	Humidity= 0	Battery_Level= 0
+05/17/2022 08:00:44 pm	FROM_ARDUINO= true	SensorID= 0	PM2= 0	PM10= 0	VOC= 0	CO2= 0	Infrared_CO2= 0	Temperature= 0	Humidity= 0	Battery_Level= 0
+05/17/2022 08:00:53 pm	FROM_ARDUINO= true	SensorID= 0	PM2= 0	PM10= 0	VOC= 0	CO2= 0	Infrared_CO2= 0	Temperature= 0	Humidity= 0	Battery_Level= 0
+05/18/2022 01:37:47 pm	FROM_ARDUINO= TRUE	ID= SIM800C	batt= 3.4
+05/18/2022 01:37:55 pm	FROM_ARDUINO= TRUE	ID= SIM800C	batt= 3.4
+05/18/2022 01:38:04 pm	FROM_ARDUINO= TRUE	ID= SIM800C	batt= 3.4
+05/18/2022 01:38:35 pm	FROM_ARDUINO= TRUE	ID= SIM800C	batt= 3.4
+05/24/2022 02:58:27 pm

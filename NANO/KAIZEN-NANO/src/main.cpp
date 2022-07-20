@@ -2,36 +2,44 @@
 #include <SoftwareSerial.h>
 #include <Seeed_HM330X.h>
 #include "sensirion_common.h"
+#include "SIM800.h"
 #include <Wire.h>
-//#include "DHT.h"
 #include "SCD30.h"
 #include "Multichannel_Gas_GMXXX.h"
+
 #define SIM800_TX_PIN 2  //SIM800 TX is connected to Arduino D2  
 #define SIM800_RX_PIN 3 //SIM800 RX is connected to Arduino D3
 //I2C A4 SDA -- A5 SCL
 #define battPin A0
-//int PWX=4; //pull up pin for SIM800
-
-
-  #ifdef  ARDUINO_SAMD_VARIANT_COMPLIANCE
-    #define SERIAL_OUTPUT SerialUSB
-#else
-    #define SERIAL_OUTPUT Serial
-#endif
+int PWX=5; //Power pin for SIM800
+int BASE= 10; //Relay input pin 
  
 // Communication ==========================================================================
-SoftwareSerial serialSIM800(SIM800_TX_PIN,SIM800_RX_PIN);
-  
-char server[] = "http://ie-gtfs.up.ac.za";
-char path[] = "/data/z-nano.php";
+SIM800* sim;
+String URL = "http://ie-gtfs.up.ac.za/data/z-nano.php";
+const char APN[9] = "afrihost";
+
 int port = 80; // port 80 is the default for HTTP
 String postData;
+String DEVICE_ID ="ZLP001";
+bool HTTPINIT=false;
+#define WAIT  30000//360000   //Time in miliseconds sensors are off
+#define WARMUP 30000//120000 //Time in miliseconds sensors are switched on for warm-up
 
 // Sensors =======================================================
+#define ON true
+#define OFF false
+  void external_state(bool state){  //Switches relay ON or OFF
+    if(state) digitalWrite(BASE,HIGH);
+    else digitalWrite(BASE,LOW);
+  }
+
+  GAS_GMXXX<TwoWire> multi_gas;
   HM330X sensor_HM330X;
   uint8_t buf[30];
   uint16_t HM330X_values[8];
-  /*parse buf with 29 uint8_t-data*/
+  /*Using Code Sample from: https://wiki.seeedstudio.com/Grove-Laser_PM2.5_Sensor-HM3301/
+    Parsing buffer with 29 uint8_t-data */
   HM330XErrorCode parse_result(uint8_t* data, uint16_t* out)
    {
     uint16_t value = 0;
@@ -39,175 +47,102 @@ String postData;
         return ERROR_PARAM;
     }
     for (int i = 1; i < 8; i++) {
-        value = (uint16_t) data[i * 2] << 8 | data[i * 2 + 1];
+      value = (uint16_t) data[i * 2] << 8 | data[i * 2 + 1];
       out[i-1] = value;
-
     }
     return NO_ERROR;
 }
 
-//DHT20 ===========================================================
-// DHT dht(DHT20); 
-
-//===========MULTI GAS
- 
-    GAS_GMXXX<TwoWire> multi_gas;
-//
-String _readSerial(){
-  
-  int timeout=0;
-  while (serialSIM800.available() != 0 && timeout< 10000)
-  {
-    Serial.write(serialSIM800.read());
-    delay(10);
-    timeout++;
-  }
-  Serial.flush();
-  if (serialSIM800.available()) {
- 	return serialSIM800.readString();
-  }
-  
-
+void reset_sim(){ //Triggers SIM800 module to reset
+  digitalWrite(PWX, LOW);
+  delay(3000);
+  digitalWrite(PWX, HIGH);    
+  delay(1000);
 }
+
+void indicate_state(int num){ //Debugging Function
+  int i=num;
+  while((i)>0){
+    digitalWrite(LED_BUILTIN,HIGH);
+    delay(250);
+    digitalWrite(LED_BUILTIN,LOW);
+    delay(250);
+    i--;
+  }
+}
+
  
 void setup() {
-  scd30.initialize();  
-  pinMode(PWX, OUTPUT);
- 
-  Serial.begin(9600);   
-  while(!Serial);    
-  serialSIM800.begin(9600);
-  delay(1000);
-
-  // serialSIM800.print(F("AT\r\n"));
-  // while (_readSerial().indexOf("OK")==-1 ){
-  //   serialSIM800.print(F("AT\r\n"));
-  // }
-   
-  Serial.println(F("Setup Complete!"));
- 
- serialSIM800.print("AT+SAPBR=3,1,\"Contype\",\"GPRS\"");
-delay(2000);
-
-serialSIM800.print("AT+SAPBR=3,1,\"APN\",\"afrihost\"");
-delay(2000);
-serialSIM800.print("AT+SAPBR=1,1");
-delay(2000);
-serialSIM800.print("AT+SAPBR=2,1");
-delay(2000);
-
   
-  /* SENSOR INITIATION:
+  pinMode(LED_BUILTIN,OUTPUT); // Debugging purposes
+  pinMode(PWX, OUTPUT);        //Setting PIN states
+  pinMode(BASE,OUTPUT);
+  sim = new SIM800(SIM800_TX_PIN,SIM800_RX_PIN);
+  
+  external_state(ON);         //Turns relay ON
 
-  */
-
- //dht.begin();
- multi_gas.begin(Wire,0x08);
- sensor_HM330X.init();
-
+  multi_gas.begin(Wire,0x08); //Initialises Sensor Connections
+  sensor_HM330X.init();
+  scd30.initialize();  
+  reset_sim();
+  sim->apn(APN);              // Sets SIM APN
 }
+
  
 void loop() {
-  // //Read SIM800 output (if available) and print it in Arduino IDE Serial Monitor
-  // if(serialSIM800.available()){
-  //   Serial.write(serialSIM800.read());
-  // }
-  // //Read Arduino IDE Serial Monitor inputs (if available) and send them to SIM800
-  // if(Serial.available()){    
-  //   serialSIM800.write(Serial.read());
-  // }
-int val = 0;
-val = analogRead(battPin);  // read the input pin
-float batt_m = 4850 * float(val)/1024;
+indicate_state(3);
 
-sensor_HM330X.read_sensor_value(buf, 29) ;
- parse_result(buf,HM330X_values);
+int attempts =0;
+  while(!sim->init(URL)) {    // Attemps initialisation 
+    //Serial.println("LOADING SIM");
+    delay(3000);
+    if( (attempts++) > 5) break; // Abandons connection attempt to rely on SIM800 internals
+  } 
+  attempts =0;
+  indicate_state(2);
 
-// float SENO_conc=0;
-// float voltage =  analogRead(SEN019)*(5000/1024.0);
-// Serial.println("Volts" + String(voltage));
-//  if(voltage == 0)
-//  {
-//  Serial.println("Fault");
-//  }
-//  else if(voltage < 400)
-//  { //pre-heating
-//  } else SENO_conc=(voltage-400)*50.0/16.0; 
- 
-//  float SENO_concentration =0;
-//   if(flag == 4){
-//     flag = 1;
-//     float pwm_high_val_ms = (pwm_high_val * 1000) / (pwm_low_val + pwm_high_val);
+  while(attempts<5){ //Attempts HTTP connection, i.e recieve OK from SIM800
+    HTTPINIT = sim->http_init();
+    if(HTTPINIT) break;
+    delay(5000);
+    attempts++;
+  }
+  indicate_state(2);
+  
+  int val = 0;
+  val = analogRead(battPin); // Battery voltage via analog pin
+  float batt_m = 4850 * float(val)/1024; //manually measured reference voltage 4850 mV and compensation for voltage drop across protection resistor
 
-//     if (pwm_high_val_ms < 0.01){
-//       Serial.println("Fault");
-//     }
-//     else if (pwm_high_val_ms < 80.00){
-//       Serial.println("preheat");
-//     }
-//     else if (pwm_high_val_ms < 998.00){
-//        SENO_concentration = (pwm_high_val_ms - 2) * 5;
-//       // Print pwm_high_val_ms
-//       Serial.print("pwm_high_val_ms:");
-//       Serial.print(pwm_high_val_ms);
-//       Serial.println("ms");
-//       //Print CO2 concentration
-//       Serial.print(SENO_concentration);
-//       Serial.println("ppm");
-//     }
-//     else{
-//       Serial.println("Beyond the maximum range ：398~4980ppm");
-//     }
-//     Serial.println();
-//   }
+  sensor_HM330X.read_sensor_value(buf, 29) ; // Populate buffer with sensor data
+  parse_result(buf,HM330X_values); 
+  float result[3] = {0}; //0: C02, 1: Temperature, 2: Humidity(%)
+  scd30.getCarbonDioxideConcentration(result);
 
+  uint32_t val_NO2 = multi_gas.measure_NO2();  //Multi-Gas Sensor
+  uint32_t val_C2H50H = multi_gas.measure_C2H5OH();
+  uint32_t val_VOC = multi_gas.measure_VOC();
+  uint32_t val_CO = multi_gas.measure_CO();
 
-float result[3] = {0}; //0: co2, 1: temp, 2: hum
-scd30.getCarbonDioxideConcentration(result);
+  //postData variable used for HTTP Request with data stored in Request URL
 
-uint32_t val_NO2 = multi_gas.measure_NO2();
-uint32_t val_C2H50H = multi_gas.measure_C2H5OH();
-uint32_t val_VOC = multi_gas.measure_VOC();
-uint32_t val_CO = multi_gas.measure_CO();
-Serial.println("N02: " +String(val_NO2) + " C2H50H: " +String(val_C2H50H) + " VOC: " +String(val_VOC )+ " CO: " +String(val_CO));
-for(int i=1; i<3;i++)
- Serial.println(" value" +String(i)+'='+String(HM330X_values[i]));
+  postData= "?";
+  postData+= "ID=" +DEVICE_ID;
+  postData+= "&1="+String(batt_m);
+  postData+= "&2=" +String(HM330X_values[1]);
+  postData+= "&3="+String(HM330X_values[2]);
+  postData+= "&4="+String(val_VOC);
+  postData+= "&5=" +String(val_CO);
+  postData+= "&6=" +String(result[0]);
+  postData+= "&7="+String(result[1]);
+  
+  attempts =0;
+  sim->http_send(postData);
+  delay(5000);
+  external_state(OFF); //Turns sensors and SIM800 OFF
+  delay(WAIT);         //Time Sensors are OFF
+  external_state(ON);  //Turns sensors and SIM800 ON
+  reset_sim();
+  delay(WARMUP);       //Warm up period for sensors
 
-Serial.println("CO2: " + String(result[0]) +" " + result[1] + " " + result[2]);
-// Serial.println("SENO: " + String(SENO_conc));
-delay(1000);
-
-postData= "?";
-postData+= "Sensor_ID=SEN_0" ;
-postData+= "&PM2=" +String(HM330X_values[1]);
-postData+= "&PM10="+String(HM330X_values[2]);
-postData+= "&VOC="+String(val_VOC);
-postData+= "&C0=" +String(val_CO);
-postData+= "&C02=" +String(result[0]);
-postData+= "&Temperature="+String(result[1]);
-// postData+= "&str=" + 2;
-// postData+= ":" +String(HM330X_values[1]);
-// postData+= ":"+String(HM330X_values[2]);
-// postData+= ":"+String(val_VOC);
-// postData+= ":" +String(val_CO);
-// postData+= ":" +String(result[0]);
-// postData+= ":"+String(result[1]);
-//postData = "?FROMARDUINO=100\"";
-
-serialSIM800.print("AT+HTTPINIT");
-delay(2000);
-serialSIM800.print( "AT+HTTPPARA=\"CID\",1");
-delay(2000);
-String url = "AT+HTTPPARA=\"URL\",\""+String(server)+path + String(postData) +"\"";
-Serial.println(url);
-serialSIM800.print(url); //url.c_str()
-delay(2000);
-serialSIM800.print("AT+HTTPPARA=\"PROPORT\",\"80\"");
-delay(2000);
-serialSIM800.print("AT+HTTPACTION=0");
-delay(10000);
-// _readSerial();
-serialSIM800.print("AT+HTTPTERM");
-                
 }
  
