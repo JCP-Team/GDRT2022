@@ -1,8 +1,8 @@
-// SIM800C.h
+// SIM800.h
 
 
-#ifndef _SIM800C_h
-#define _SIM800C_h
+#ifndef _SIM800_h
+#define _SIM800_h
 
 
 #include "Arduino.h"
@@ -11,10 +11,10 @@
 
 #define DEFAULT_TIMEOUT 1000
 
-class SIM800C {
+class SIM800 {
 	SoftwareSerial sim;
 	String buffer;
-	String SERVER ="http://ie-gtfs.up.ac.za/data/z-nano.php";
+	String SERVER; 
 	
 
 	bool find_result(const char *res_1, const char *res_2 = "");
@@ -23,12 +23,12 @@ class SIM800C {
 
 public:
 
-	SIM800C(const int TX_PIN = 8, const int RX_PIN = 9,
+	SIM800(const int TX_PIN = 8, const int RX_PIN = 9,
 		const int baud_rate = 9600) :sim(TX_PIN, RX_PIN) {
 		sim.begin(baud_rate);
 	}
 
-	bool init();
+	bool init(String server);
 	void start(){
 	sim.begin(9600);
 	};

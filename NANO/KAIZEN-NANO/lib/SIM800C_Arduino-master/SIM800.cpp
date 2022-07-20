@@ -1,37 +1,37 @@
-#include "SIM800C.h"
+#include "SIM800.h"
 
-bool SIM800C::init()
-{
+bool SIM800::init(String server)
+{	SERVER =server;
 	echo(false);
 	return sim_status() && net_registration(); //&& gprs_status();
 }
 
-bool SIM800C::restart()
+bool SIM800::restart()
 {
 	return exec("AT+CFUN=1,1") && find_result("OK");
 }
 
-bool SIM800C::sim_status()
+bool SIM800::sim_status()
 {
 	return exec("AT+CPIN?") && find_result("+CPIN: READY", "OK");
 }
 
-bool SIM800C::net_registration()
+bool SIM800::net_registration()
 {
 	return exec("AT+CREG?") && find_result("+CREG: 0,1", "OK");
 }
 
-bool SIM800C::gprs_status()
+bool SIM800::gprs_status()
 {
 	return exec("AT+CGATT?") && find_result("+CGATT: 1", "OK");
 }
-void SIM800C::enable_error_msg(){
+void SIM800::enable_error_msg(){
 	exec("AT+CMEE=2");
 }
-void SIM800C::disable_error_msg(){
+void SIM800::disable_error_msg(){
 	exec("AT+CMEE=0");
 }
-bool SIM800C::apn(const char * apn)
+bool SIM800::apn(const char * apn)
 {
 	char at[20];
 	sprintf(at, "AT+CSTT=\"%s\"", apn);
@@ -40,14 +40,14 @@ bool SIM800C::apn(const char * apn)
 		exec("AT+CIFSR") && find_result(".");
 }
 
-bool SIM800C::create_tcp(const char *ip, unsigned int port)
+bool SIM800::create_tcp(const char *ip, unsigned int port)
 {
 	char at[100];
 	sprintf(at, "AT+CIPSTART=\"TCP\",\"%s\",\"%d\"", ip, port);
 	return exec(at) && find_result("CONNECT OK", "OK");
 }
 
-bool SIM800C::tcp_send(const char * send)
+bool SIM800::tcp_send(const char * send)
 {
 	int len = strlen(send);
 	char at[20];
@@ -58,12 +58,12 @@ bool SIM800C::tcp_send(const char * send)
 	return exec(send, 1000 * 3) && find_result("SEND OK");
 }
 
-String SIM800C::send_result()
+String SIM800::send_result()
 {
 	return buffer;
 }
 
-unsigned long SIM800C::get_num_localip()
+unsigned long SIM800::get_num_localip()
 {
 	while (!(exec("AT+CIFSR") && find_result(".")));
 	buffer.trim();
@@ -80,32 +80,32 @@ unsigned long SIM800C::get_num_localip()
 	return num;
 }
 
-String SIM800C::get_str_localip()
+String SIM800::get_str_localip()
 {
 	while (!(exec("AT+CIFSR") && find_result(".")));
 	buffer.trim();
 	return buffer;
 }
-bool SIM800C::wake(){
+bool SIM800::wake(){
 	// while (!(exec("AT") && find_result("OK")));
 	// return exec("AT+CSCLK=0") && sim_status();
 		return exec("AT+CFUN=1") && sim_status();
 
 }
-void SIM800C::sleep(){
+void SIM800::sleep(){
 	exec("AT+CFUN=0");
 }
-bool SIM800C::create_tcp_server(unsigned int port)
+bool SIM800::create_tcp_server(unsigned int port)
 {
 	char at[25];
 	sprintf(at, "AT+CIPSERVER=%d", port);
 	return exec(at) && find_result("SERVER OK");
 }
-void SIM800C::http_end(){
+void SIM800::http_end(){
 	exec("AT+HTTPTERM");
 	exec("AT+SAPBR=0,1");
 }
-bool SIM800C::http_init()
+bool SIM800::http_init()
 {	
 	exec("AT+SAPBR=3,1,\"APN\",\"afrihost\"");
 	exec("AT+SAPBR=1,1");
@@ -113,7 +113,7 @@ bool SIM800C::http_init()
 	return exec("AT+HTTPINIT") && find_result("OK");
 }
 
-String SIM800C::http_send(String send)
+String SIM800::http_send(String send)
 {
 	 //enable_error_msg();
 		exec("AT+HTTPPARA=\"CID\",1");
@@ -130,14 +130,14 @@ String SIM800C::http_send(String send)
 }
 
 
-bool SIM800C::multi_link_mode(bool flag)
+bool SIM800::multi_link_mode(bool flag)
 {
 	char at[15];
 	sprintf(at, "AT+CIPMUX=%d", flag ? 1 : 0);
 	return exec(at) && find_result("OK");
 }
 
-unsigned int SIM800C::exec(const char * AT, unsigned int timeout)
+unsigned int SIM800::exec(const char * AT, unsigned int timeout)
 {
 	clean_buffer();
 	buffer = "";
@@ -156,14 +156,14 @@ unsigned int SIM800C::exec(const char * AT, unsigned int timeout)
 }
 
 // false -> not show AT, true -> show AT
-bool SIM800C::echo(bool flag)
+bool SIM800::echo(bool flag)
 {
 	char at[10];
 	sprintf(at, "ATE%d", flag ? 1 : 0);
 	return exec(at) && find_result("OK");
 }
 
-bool SIM800C::base_station_position(double &longitude, double &latitude, unsigned int &precision)
+bool SIM800::base_station_position(double &longitude, double &latitude, unsigned int &precision)
 {
 	exec("AT+SAPBR=3,1,\"APN\",\"3gnet\"");
 	exec("AT+SAPBR=3,1,\"APN\",\"3gnet\"");
@@ -191,7 +191,7 @@ bool SIM800C::base_station_position(double &longitude, double &latitude, unsigne
 	return longitude && latitude && precision;
 }
 
-bool SIM800C::find_result(const char *res1, const char *res2)
+bool SIM800::find_result(const char *res1, const char *res2)
 {
 	//Serial.print("res1:");
 	//Serial.println(buffer.indexOf(res1));
@@ -200,13 +200,13 @@ bool SIM800C::find_result(const char *res1, const char *res2)
 	return buffer.indexOf(res1) != -1 && buffer.indexOf(res2) != -1;
 }
 
-void SIM800C::clean_buffer()
+void SIM800::clean_buffer()
 {
 	while (sim.available())
 		sim.read();
 }
 
-void SIM800C::debug()
+void SIM800::debug()
 {
 	while (true) {
 		if (sim.available()) {
