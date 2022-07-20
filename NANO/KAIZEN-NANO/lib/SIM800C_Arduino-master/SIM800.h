@@ -49,14 +49,10 @@ public:
 	
 	bool http_init();
 	
-	String http_send(String send);
+	bool http_send(String send);
 	void http_end();
 
 	String send_result();
-
-	unsigned long get_num_localip();
-	
-	String get_str_localip();
 
 	bool echo(bool flag); 
 
@@ -65,14 +61,11 @@ public:
 	void sleep();
 	bool create_tcp_server(unsigned int port);
 
-	bool multi_link_mode(bool flag);
-
 	void enable_error_msg();
 	void disable_error_msg();
 
 	unsigned int exec(const char *AT, unsigned int timeout = DEFAULT_TIMEOUT);
 
-	bool base_station_position(double &longitude, double &latitude, unsigned int &precision);
 };
 
 #endif

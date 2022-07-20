@@ -63,43 +63,13 @@ String SIM800::send_result()
 	return buffer;
 }
 
-unsigned long SIM800::get_num_localip()
-{
-	while (!(exec("AT+CIFSR") && find_result(".")));
-	buffer.trim();
-	unsigned long num = 0;
-	int cur = 0;
-	for (int i = 3; i >= 0; i--) {
-		while (buffer[cur] == '.')
-			cur++;
-		char *ip = (char *)&num;
-		while ('0' <= buffer[cur] && buffer[cur] <= '9')
-			ip[i] = ip[i] * 10 + buffer[cur++] - '0';
-	}
-
-	return num;
-}
-
-String SIM800::get_str_localip()
-{
-	while (!(exec("AT+CIFSR") && find_result(".")));
-	buffer.trim();
-	return buffer;
-}
 bool SIM800::wake(){
 	// while (!(exec("AT") && find_result("OK")));
 	// return exec("AT+CSCLK=0") && sim_status();
 		return exec("AT+CFUN=1") && sim_status();
-
 }
 void SIM800::sleep(){
 	exec("AT+CFUN=0");
-}
-bool SIM800::create_tcp_server(unsigned int port)
-{
-	char at[25];
-	sprintf(at, "AT+CIPSERVER=%d", port);
-	return exec(at) && find_result("SERVER OK");
 }
 void SIM800::http_end(){
 	exec("AT+HTTPTERM");
@@ -113,7 +83,7 @@ bool SIM800::http_init()
 	return exec("AT+HTTPINIT") && find_result("OK");
 }
 
-String SIM800::http_send(String send)
+bool SIM800::http_send(String send)
 {
 	 //enable_error_msg();
 		exec("AT+HTTPPARA=\"CID\",1");
@@ -125,16 +95,8 @@ String SIM800::http_send(String send)
 		exec(at);
 		exec("AT+HTTPPARA=\"PROPORT\",\"80\"");
 		exec("AT+HTTPACTION=0",10000);
-		return  send_result();
+		return  find_result("200") || find_result("202"); // Result expected: "OK" || "Accepted"
 	
-}
-
-
-bool SIM800::multi_link_mode(bool flag)
-{
-	char at[15];
-	sprintf(at, "AT+CIPMUX=%d", flag ? 1 : 0);
-	return exec(at) && find_result("OK");
 }
 
 unsigned int SIM800::exec(const char * AT, unsigned int timeout)
@@ -163,33 +125,6 @@ bool SIM800::echo(bool flag)
 	return exec(at) && find_result("OK");
 }
 
-bool SIM800::base_station_position(double &longitude, double &latitude, unsigned int &precision)
-{
-	exec("AT+SAPBR=3,1,\"APN\",\"3gnet\"");
-	exec("AT+SAPBR=3,1,\"APN\",\"3gnet\"");
-	exec("AT+SAPBR=1,1");
-	exec("AT+CLBS=1,1");
-
-	const char *str = buffer.c_str();
-	int point[3];
-	int cnt = 0;
-	for (int i = 0; str[i]; i++)
-		if (str[i] == ',')
-			point[cnt++] = i + 1;
-	if (cnt == 3) {
-		longitude = atof(str + point[0]);
-		latitude = atof(str + point[1]);
-		precision = atoi(str + point[2]);
-	}
-
-	
-	//Serial.println("----------");
-	//Serial.println(longitude, 6);
-	//Serial.println(latitude, 6);
-	//Serial.println(precision);
-	//Serial.println("----------");
-	return longitude && latitude && precision;
-}
 
 bool SIM800::find_result(const char *res1, const char *res2)
 {

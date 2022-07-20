@@ -23,8 +23,8 @@ int port = 80; // port 80 is the default for HTTP
 String postData;
 String DEVICE_ID ="F1";
 bool HTTPINIT=false;
-#define WAIT 36000   //Time in miliseconds sensors are off
-#define WARMUP 12000 //Time in miliseconds sensors are switched on for warm-up
+#define WAIT  30000//360000   //Time in miliseconds sensors are off
+#define WARMUP 30000//120000 //Time in miliseconds sensors are switched on for warm-up
 
 // Sensors =======================================================
 #define ON true
@@ -84,7 +84,7 @@ void setup() {
   multi_gas.begin(Wire,0x08); //Initialises Sensor Connections
   sensor_HM330X.init();
   scd30.initialize();  
-   
+  reset_sim();
   sim->apn(APN);              // Sets SIM APN
 }
 
@@ -95,22 +95,30 @@ indicate_state(3);
 int attempts =0;
   while(!sim->init(URL)) {    // Attemps initialisation 
     //Serial.println("LOADING SIM");
-    delay(1000);
-    if( attempts++ > 10) break; // Abandons connection attempt to rely on SIM800 internals
+    delay(3000);
+    if( (attempts++) > 5) break; // Abandons connection attempt to rely on SIM800 internals
   } 
   attempts =0;
+  indicate_state(2);
 
-  while(!HTTPINIT){      //Attempts HTTP connection, i.e recieve OK from SIM800
-    if(attempts++ >= 5){
-      reset_sim();
+  while(attempts<5){
+    HTTPINIT = sim->http_init();
+    if(HTTPINIT) break;
     delay(5000);
-    attempts=0;
-    }
-    HTTPINIT=sim->http_init();
-    if(HTTPINIT)break; 
-    delay(12000);
+    attempts++;
   }
-  HTTPINIT=false;
+  indicate_state(2);
+  // while(!HTTPINIT){      //Attempts HTTP connection, i.e recieve OK from SIM800
+  //   if(attempts++ >= 5){
+  //     reset_sim();
+  //   delay(5000);
+  //   attempts=0;
+  //   }
+  //   HTTPINIT=sim->http_init();
+  //   if(HTTPINIT)break; 
+  //   delay(12000);
+  // }
+  // HTTPINIT=false;
   
   int val = 0;
   val = analogRead(battPin); // Battery voltage via analog pin
@@ -137,10 +145,14 @@ int attempts =0;
   postData+= "&C=" +String(val_CO);
   postData+= "&C=" +String(result[0]);
   postData+= "&T="+String(result[1]);
-
-  String response = sim->http_send(postData); //Response stored for debugging purposes
+  
+  attempts =0;
+  while(!(sim->http_send(postData))){
+    if(attempts++ >2) break;
+    delay(5000);
+    //String response = sim->send_result(); //Response stored for debugging purposes
+  } 
   delay(5000);
-  indicate_state(2);
   external_state(OFF); //Turns sensors and SIM800 OFF
   delay(WAIT);         //Time Sensors are OFF
   external_state(ON);  //Turns sensors and SIM800 ON
