@@ -17,14 +17,14 @@ int BASE= 10; //Relay input pin
 // Communication ==========================================================================
 SIM800* sim;
 String URL = "http://ie-gtfs.up.ac.za/data/z-nano.php";
-char* APN = "afrihost";
+const char APN[9] = "afrihost";
 
 int port = 80; // port 80 is the default for HTTP
 String postData;
 String DEVICE_ID ="F1";
 bool HTTPINIT=false;
-#define WAIT 10000   //Time in seconds sensors are off
-#define WARMUP 60000 //Time in seconds sensors are switched on for warm-up
+#define WAIT 36000   //Time in miliseconds sensors are off
+#define WARMUP 12000 //Time in miliseconds sensors are switched on for warm-up
 
 // Sensors =======================================================
 #define ON true
@@ -73,6 +73,7 @@ void indicate_state(int num){ //Debugging Function
 
  
 void setup() {
+  
   pinMode(LED_BUILTIN,OUTPUT); // Debugging purposes
   pinMode(PWX, OUTPUT);        //Setting PIN states
   pinMode(BASE,OUTPUT);
@@ -89,6 +90,8 @@ void setup() {
 
  
 void loop() {
+indicate_state(3);
+
 int attempts =0;
   while(!sim->init(URL)) {    // Attemps initialisation 
     //Serial.println("LOADING SIM");
@@ -105,10 +108,10 @@ int attempts =0;
     }
     HTTPINIT=sim->http_init();
     if(HTTPINIT)break; 
-    delay(30000);
+    delay(12000);
   }
   HTTPINIT=false;
-
+  
   int val = 0;
   val = analogRead(battPin); // Battery voltage via analog pin
   float batt_m = 4850 * float(val)/1024; //manually measured reference voltage 4850 mV and compensation for voltage drop across protection resistor
@@ -137,10 +140,11 @@ int attempts =0;
 
   String response = sim->http_send(postData); //Response stored for debugging purposes
   delay(5000);
-
+  indicate_state(2);
   external_state(OFF); //Turns sensors and SIM800 OFF
   delay(WAIT);         //Time Sensors are OFF
   external_state(ON);  //Turns sensors and SIM800 ON
+  reset_sim();
   delay(WARMUP);       //Warm up period for sensors
 
 }
