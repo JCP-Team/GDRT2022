@@ -21,7 +21,7 @@ const char APN[9] = "afrihost";
 
 int port = 80; // port 80 is the default for HTTP
 String postData;
-String DEVICE_ID ="F1";
+String DEVICE_ID ="ZLP001";
 bool HTTPINIT=false;
 #define WAIT  30000//360000   //Time in miliseconds sensors are off
 #define WARMUP 30000//120000 //Time in miliseconds sensors are switched on for warm-up
@@ -101,24 +101,13 @@ int attempts =0;
   attempts =0;
   indicate_state(2);
 
-  while(attempts<5){
+  while(attempts<5){ //Attempts HTTP connection, i.e recieve OK from SIM800
     HTTPINIT = sim->http_init();
     if(HTTPINIT) break;
     delay(5000);
     attempts++;
   }
   indicate_state(2);
-  // while(!HTTPINIT){      //Attempts HTTP connection, i.e recieve OK from SIM800
-  //   if(attempts++ >= 5){
-  //     reset_sim();
-  //   delay(5000);
-  //   attempts=0;
-  //   }
-  //   HTTPINIT=sim->http_init();
-  //   if(HTTPINIT)break; 
-  //   delay(12000);
-  // }
-  // HTTPINIT=false;
   
   int val = 0;
   val = analogRead(battPin); // Battery voltage via analog pin
@@ -137,21 +126,17 @@ int attempts =0;
   //postData variable used for HTTP Request with data stored in Request URL
 
   postData= "?";
-  postData+= "I=" +DEVICE_ID;
-  postData+= "&B="+String(batt_m);
-  postData+= "&P2=" +String(HM330X_values[1]);
-  postData+= "&P1="+String(HM330X_values[2]);
-  postData+= "&V="+String(val_VOC);
-  postData+= "&C=" +String(val_CO);
-  postData+= "&C=" +String(result[0]);
-  postData+= "&T="+String(result[1]);
+  postData+= "ID=" +DEVICE_ID;
+  postData+= "&1="+String(batt_m);
+  postData+= "&2=" +String(HM330X_values[1]);
+  postData+= "&3="+String(HM330X_values[2]);
+  postData+= "&4="+String(val_VOC);
+  postData+= "&5=" +String(val_CO);
+  postData+= "&6=" +String(result[0]);
+  postData+= "&7="+String(result[1]);
   
   attempts =0;
-  while(!(sim->http_send(postData))){
-    if(attempts++ >2) break;
-    delay(5000);
-    //String response = sim->send_result(); //Response stored for debugging purposes
-  } 
+  sim->http_send(postData);
   delay(5000);
   external_state(OFF); //Turns sensors and SIM800 OFF
   delay(WAIT);         //Time Sensors are OFF
