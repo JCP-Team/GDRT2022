@@ -85,17 +85,17 @@ void setup() {
   scd30.initialize();  
    
   sim->apn(APN);              // Sets SIM APN
-  int attempts =0;
-  while(!sim->init(URL)) {    // Attemps initialisation 
-    //Serial.println("LOADING SIM");
-    delay(1000);
-    if( attempts++ > 10) break; // Abandons connection attempt
-  }
 }
 
  
 void loop() {
-  int attempts =0;
+int attempts =0;
+  while(!sim->init(URL)) {    // Attemps initialisation 
+    //Serial.println("LOADING SIM");
+    delay(1000);
+    if( attempts++ > 10) break; // Abandons connection attempt to rely on SIM800 internals
+  } 
+  attempts =0;
 
   while(!HTTPINIT){      //Attempts HTTP connection, i.e recieve OK from SIM800
     if(attempts++ >= 5){
